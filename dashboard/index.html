@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://ethereum-sepolia.publicnode.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org;">
+
+    <title>RWA Token Dashboard</title>
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="background-mesh"></div>
+
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-top">
+                <div class="status-badge"><span class="pulse"></span> Rede Ativa</div>
+                <div class="wallet-container">
+                    <button id="connectWalletBtn" class="wallet-btn">Conectar Wallet</button>
+                    <div id="walletInfo" class="wallet-info" style="display: none;">
+                        <span id="networkName" class="network-badge">---</span>
+                        <div class="address-pill">
+                            <span id="walletAddress" class="wallet-address">0x...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h1>Ativo RWA Tokenizado</h1>
+            <p class="subtitle">Visualização de Ativo do Mundo Real</p>
+        </header>
+
+        <section class="token-card glass-panel">
+            <div class="token-identity">
+                <div class="token-icon">
+                    <!-- Ícone placeholder (SVG inline) -->
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="token-name-group">
+                    <h2 id="tokenName">Carregando...</h2>
+                    <span id="tokenSymbol" class="token-symbol">---</span>
+                </div>
+            </div>
+
+            <div class="grid-stats">
+                <div class="stat-item">
+                    <span class="label">Total Emitido</span>
+                    <div class="value-container">
+                        <span id="totalSupply" class="value">---</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Decimais</span>
+                    <div class="value-container">
+                        <span id="decimals" class="value">---</span>
+                    </div>
+                </div>
+
+                <!-- Visualização de progresso do Supply (Oculto se MaxSupply não definido) -->
+                <div class="stat-item full-width" id="progressSection" style="display: none;">
+                    <div class="progress-header">
+                        <span class="label">Progresso da Emissão</span>
+                        <span id="emissionPercent" class="percent-value">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="progressBar" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div class="stat-item full-width">
+                    <span class="label">Endereço do Contrato</span>
+                    <div class="address-container" id="copyAddressBtn">
+                        <span id="contractAddress" class="address-text">0x...</span>
+                        <div class="copy-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path
+                                    d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="copyFeedback" class="copy-feedback">Endereço copiado!</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="legal-footer">
+            <p>Dashboard RWA - Beatriz Aguiar - Read Only</p>
+        </footer>
+    </main>
+
+    <script type="module" src="sistema.js"></script>
+</body>
+
+</html>
