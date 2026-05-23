@@ -366,6 +366,29 @@ h1 {
     margin-top: auto;
 }
 
+/* Botão desconectar */
+.disconnect-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.disconnect-btn:hover {
+    background: rgba(255, 60, 60, 0.15);
+    border-color: rgba(255, 60, 60, 0.4);
+    color: #ff6b6b;
+    transform: scale(1.1);
+}
+
 
 /* Progress Bar */
 .progress-header {

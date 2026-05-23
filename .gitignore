@@ -4,6 +4,9 @@ jspm_packages/
 package-lock.json
 yarn.lock
 
+# Configuração local (contém chaves privadas como Project ID do WalletConnect)
+dashboard/config.js
+
 # Environment variables
 .env
 .env.local

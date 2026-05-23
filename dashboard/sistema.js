@@ -14,9 +14,11 @@ import { mainnet, sepolia } from 'https://esm.sh/@wagmi/core@2.6.5/chains';
 import { createPublicClient, formatUnits } from 'https://esm.sh/viem@2.7.1';
 
 // --- CONFIGURAÇÃO E CONSTANTES ---
-// [SECURITY WARNING] Project ID is a placeholder. 
-// WalletConnect (QR Code) will fail, but Injected wallets (MetaMask) work safely.
-const PROJECT_ID = 'YOUR_PROJECT_ID'; // TODO: Replace with valid ID for WC support
+// Para habilitar WalletConnect (QR Code), obtenha um Project ID gratuito em:
+// https://cloud.walletconnect.com e substitua a string abaixo.
+// MetaMask e Rabby via extensão funcionam sem nenhuma configuração adicional.
+const PROJECT_ID = ''; // Opcional: necessário apenas para WalletConnect QR Code
+
 const RPC_URL = "https://ethereum-sepolia.publicnode.com";
 const CONTRACT_ADDRESS = "0x539543926AC76ba2B61eC28A500241DbaAA688c9"; // Token ERC20 alvo (Sepolia)
 const MAX_SUPPLY = 500000000; // Referência para cálculo da barra de progresso (hardcoded)
@@ -50,6 +52,7 @@ const publicClient = createPublicClient({
 
 // Referências DOM globais (injetadas no onLoad)
 let elConnectBtn;
+let elDisconnectBtn;
 let elWalletInfo;
 let elWalletAddress;
 let elNetworkName;
@@ -124,31 +127,36 @@ function updateProgressBar(currentSupply) {
     }
 }
 
-// --- FUNÇÕES DE WALLET (Wagmi) ---
+// --- FUNÇÕES DE WALLET ---
 
-function updateWalletUI(account) {
+/**
+ * Atualiza a UI da wallet com base em dados brutos do MetaMask.
+ * @param {string|null} address - Endereço conectado ou null para desconectado.
+ */
+async function updateWalletUI(address) {
     if (!elConnectBtn || !elWalletInfo) return;
 
-    if (account.isConnected && account.address) {
+    if (address) {
+        // Estado: conectado
         elConnectBtn.style.display = 'none';
         elWalletInfo.style.display = 'flex';
-        if (elWalletAddress) elWalletAddress.textContent = formatAddress(account.address);
 
-        // Feedback visual da chain conectada
-        const chainId = account.chainId;
-        const chain = config.chains.find(c => c.id === chainId);
+        if (elWalletAddress) elWalletAddress.textContent = formatAddress(address);
 
-        if (elNetworkName) {
-            if (chain) {
-                elNetworkName.textContent = chain.name;
-                elNetworkName.style.color = 'var(--text-secondary)';
-            } else {
-                elNetworkName.textContent = "Rede Desconhecida";
-                elNetworkName.style.color = "yellow";
+        // Busca rede atual
+        try {
+            const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+            const chainId = parseInt(chainIdHex, 16);
+            const chain = config.chains.find(c => c.id === chainId);
+            if (elNetworkName) {
+                elNetworkName.textContent = chain ? chain.name : 'Rede Desconhecida';
+                elNetworkName.style.color = chain ? 'var(--text-secondary)' : 'yellow';
             }
+        } catch {
+            if (elNetworkName) elNetworkName.textContent = '---';
         }
-
     } else {
+        // Estado: desconectado
         elConnectBtn.style.display = 'block';
         elWalletInfo.style.display = 'none';
         if (elWalletAddress) elWalletAddress.textContent = '';
@@ -157,30 +165,57 @@ function updateWalletUI(account) {
 }
 
 async function handleConnect() {
-    console.log("CONNECT CLICK - Iniciando");
-
     if (!window.ethereum) {
-        alert("Nenhuma wallet detectada (MetaMask/Rabby). Abra no Chrome com extensão habilitada.");
+        alert('Nenhuma wallet detectada. Instale MetaMask ou Rabby e recarregue a página.');
         return;
     }
 
-    try {
-        console.log("Tentando conectar via Wagmi...");
-        // Conexão primária via Connector Injetado
-        await connect(config, { connector: injected() });
-    } catch (error) {
-        console.error("Erro Wagmi (Tentando Fallback):", error);
-        // NOTE: Silencia erro do conector Wagmi para tentar fallback nativo (window.ethereum)
+    // Feedback visual durante a conexão
+    if (elConnectBtn) {
+        elConnectBtn.disabled = true;
+        elConnectBtn.textContent = 'Conectando...';
+    }
 
-        try {
-            console.log("Tentando Fallback: window.ethereum.request...");
-            await window.ethereum.request({ method: "eth_requestAccounts" });
-            // Sucesso no fallback dispara hooks do Wagmi (watchAccount) automaticamente
-        } catch (fallbackError) {
-            console.error("Erro Fallback:", fallbackError);
-            alert("Erro ao conectar: " + (fallbackError.message || fallbackError));
+    try {
+        // eth_requestAccounts abre o popup nativo da MetaMask/Rabby
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        // Atualiza a UI imediatamente com o endereço retornado
+        if (accounts && accounts.length > 0) {
+            await updateWalletUI(accounts[0]);
+        }
+        console.log('[RWA] Wallet conectada:', accounts[0]);
+    } catch (error) {
+        if (error.code === 4001) {
+            // Código 4001 = usuário fechou ou recusou o popup
+            console.warn('[RWA] Usuário recusou a conexão com a wallet.');
+        } else {
+            console.error('[RWA] Erro ao conectar wallet:', error);
+            alert('Erro ao conectar: ' + (error.message || 'Tente novamente.'));
+        }
+    } finally {
+        // Restaura o botão independente do resultado
+        if (elConnectBtn) {
+            elConnectBtn.disabled = false;
+            elConnectBtn.textContent = 'Conectar Wallet';
         }
     }
+}
+
+async function handleDisconnect() {
+    try {
+        // Revoga permissões no MetaMask (disponível em versões modernas)
+        await window.ethereum.request({
+            method: 'wallet_revokePermissions',
+            params: [{ eth_accounts: {} }]
+        });
+    } catch {
+        // Fallback: wallet_revokePermissions pode não estar disponível em todos os providers
+    }
+
+    // Desconecta no Wagmi e limpa a UI
+    try { await disconnect(config); } catch { /* ignora */ }
+    await updateWalletUI(null);
+    console.log('[RWA] Wallet desconectada.');
 }
 
 // --- UTILITÁRIOS ---
@@ -194,21 +229,22 @@ function formatAddress(address) {
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Captura de elementos DOM após carregamento
-    elConnectBtn = document.getElementById('connectWalletBtn');
-    elWalletInfo = document.getElementById('walletInfo');
+    elConnectBtn    = document.getElementById('connectWalletBtn');
+    elDisconnectBtn = document.getElementById('disconnectBtn');
+    elWalletInfo    = document.getElementById('walletInfo');
     elWalletAddress = document.getElementById('walletAddress');
-    elNetworkName = document.getElementById('networkName');
+    elNetworkName   = document.getElementById('networkName');
 
-    elName = document.getElementById('tokenName');
-    elSymbol = document.getElementById('tokenSymbol');
-    elSupply = document.getElementById('totalSupply');
-    elDecimals = document.getElementById('decimals');
-    elAddress = document.getElementById('contractAddress');
-    copyBtn = document.getElementById('copyAddressBtn');
-    copyFeedback = document.getElementById('copyFeedback');
+    elName           = document.getElementById('tokenName');
+    elSymbol         = document.getElementById('tokenSymbol');
+    elSupply         = document.getElementById('totalSupply');
+    elDecimals       = document.getElementById('decimals');
+    elAddress        = document.getElementById('contractAddress');
+    copyBtn          = document.getElementById('copyAddressBtn');
+    copyFeedback     = document.getElementById('copyFeedback');
     elProgressSection = document.getElementById('progressSection');
     elEmissionPercent = document.getElementById('emissionPercent');
-    elProgressBar = document.getElementById('progressBar');
+    elProgressBar    = document.getElementById('progressBar');
 
     // 2. Busca dados on-chain públicos (independe de login)
     loadTokenData();
@@ -216,6 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Listeners de interação
     if (elConnectBtn) {
         elConnectBtn.addEventListener('click', handleConnect);
+    }
+
+    if (elDisconnectBtn) {
+        elDisconnectBtn.addEventListener('click', handleDisconnect);
     }
 
     // Cópia p/ clipboard com feedback visual
@@ -230,12 +270,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Restauração de sessão e observadores de estado
-    reconnect(config);
+    // 4. Verifica se já existe uma wallet conectada ao carregar a página
+    if (window.ethereum) {
+        window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+            if (accounts && accounts.length > 0) {
+                updateWalletUI(accounts[0]);
+            }
+        }).catch(() => {});
 
-    watchAccount(config, {
-        onChange(account) {
-            updateWalletUI(account);
-        },
-    });
+        // Observa mudanças de conta (troca de conta ou desconexão pelo usuário)
+        window.ethereum.on('accountsChanged', (accounts) => {
+            if (accounts && accounts.length > 0) {
+                updateWalletUI(accounts[0]);
+            } else {
+                updateWalletUI(null);
+            }
+        });
+
+        // Observa mudanças de rede
+        window.ethereum.on('chainChanged', () => {
+            // Ao trocar de rede, re-lê a conta atual para atualizar o badge de rede
+            window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+                if (accounts && accounts.length > 0) updateWalletUI(accounts[0]);
+            }).catch(() => {});
+        });
+    }
 });
