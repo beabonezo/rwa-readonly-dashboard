@@ -5,8 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Dashboard de visualização de ativo do mundo real (RWA) tokenizado na rede Sepolia. Leitura pública de dados on-chain via Wagmi e Viem.">
+    <!--
+        CSP configurada para leitura on-chain via Sepolia.
+        connect-src inclui apenas o RPC público atual.
+        ATENÇÃO: ao ativar WalletConnect (config.js com PROJECT_ID real),
+        adicionar de volta ao connect-src:
+          https://*.walletconnect.com wss://*.walletconnect.com
+          https://*.walletconnect.org wss://*.walletconnect.org
+    -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://ethereum-sepolia.publicnode.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org;">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://ethereum-sepolia.publicnode.com;">
 
     <title>RWA Token Dashboard</title>
 

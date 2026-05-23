@@ -12,12 +12,11 @@ import {
 } from 'https://esm.sh/@wagmi/core@2.6.5';
 import { mainnet, sepolia } from 'https://esm.sh/@wagmi/core@2.6.5/chains';
 import { createPublicClient, formatUnits } from 'https://esm.sh/viem@2.7.1';
+// PROJECT_ID vem de config.js (arquivo local NÃO commitado — ver config.example.js).
+// MetaMask e Rabby via extensão funcionam sem configuração. WalletConnect requer o ID.
+import { PROJECT_ID } from './config.js';
 
 // --- CONFIGURAÇÃO E CONSTANTES ---
-// Para habilitar WalletConnect (QR Code), obtenha um Project ID gratuito em:
-// https://cloud.walletconnect.com e substitua a string abaixo.
-// MetaMask e Rabby via extensão funcionam sem nenhuma configuração adicional.
-const PROJECT_ID = ''; // Opcional: necessário apenas para WalletConnect QR Code
 
 const RPC_URL = "https://ethereum-sepolia.publicnode.com";
 const CONTRACT_ADDRESS = "0x539543926AC76ba2B61eC28A500241DbaAA688c9"; // Token ERC20 alvo (Sepolia)

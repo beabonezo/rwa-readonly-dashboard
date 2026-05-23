@@ -4,8 +4,12 @@ jspm_packages/
 package-lock.json
 yarn.lock
 
-# Configuração local (contém chaves privadas como Project ID do WalletConnect)
-dashboard/config.js
+# Configuração local (config.js com valor real do Project ID do WalletConnect)
+# ATENÇÃO: config.js COM VALOR REAL não deve ser commitado.
+# O arquivo com string vazia (placeholder) É commitado intencionalmente
+# para que o import em sistema.js funcione na Vercel.
+# Se preencher o PROJECT_ID, adicione config.js aqui novamente antes do commit.
+# dashboard/config.js   <- descomente esta linha quando tiver valor real
 
 # Environment variables
 .env
